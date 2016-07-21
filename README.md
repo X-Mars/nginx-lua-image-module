@@ -1,6 +1,16 @@
 # nginx-lua-image-module
 基于OpenResty(Nginx)，用Lua脚本实现的图片处理模块，目前实现了缩略图功能
+  
+  
+##更新日志
+2016-07-21  
+修改为oss版  
+实现方法：  
+1. openresty方向代理oss  
+2. lua调用wget命令下载oss内的原图
+3. 下载原图成功后，开始缩放
 
+  
 ## 说明
 目前主要实现图片缩略图功能，可对不同目录配置缩略图尺寸，无图片时可显示一张默认图片，支持多种缩放方式等，后续可基于GraphicsMagick实现更多功能。
 
@@ -31,11 +41,11 @@ img.xxx.com
 
 #### 链接地址
 * 原图访问地址：```http://img.xxx.com/photos/001/001.jpg```
-* 缩略图访问地址：```http://img.xxx.com/photos/001/001_100x100.jpg``` (请勿加thumbnail)
+* 缩略图访问地址：```http://img.xxx.com/photos/001/001_100@100.jpg``` (请勿加thumbnail)
 
 #### 不同目录可以设置不同的缩略图规则，如
 * 原图访问地址：```http://img.xxx.com/mall/001/001.jpg```
-* 缩略图访问地址：```http://img.xxx.com/mall/001/001.jpg_100x100.jpg``` (请勿加thumbnail)
+* 缩略图访问地址：```http://img.xxx.com/mall/001/001.jpg_100@100.jpg``` (请勿加thumbnail)
 
 #### 访问流程
 * 首先判断缩略图是否存在，如存在则直接显示缩略图；
@@ -52,7 +62,7 @@ img.xxx.com
 
 ```lua
 -- nginx thumbnail module 
--- last update : 2014/8/21
+-- last update : 2016/7/21
 -- version     : 0.4.1
 
 module(...,package.seeall)
@@ -109,8 +119,8 @@ cfg = {
 ```
 
 ## 依赖
-* OpenResty(1.4.2.7)
-* GraphicsMagick(1.3.18)
+* OpenResty(1.9.7.1)
+* GraphicsMagick(1.3.24)
   * libjpeg-6b
   * libpng-1.2.49
   * freetype-2.4.10    
