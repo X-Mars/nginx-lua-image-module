@@ -1,8 +1,9 @@
 -- nginx thumbnail module 
--- last update : 2014/8/21
--- version     : 0.4.1
+-- last update : 2017/7/21
+
 
 local c  = require 'config'
+--require 'socket'
 
 --[[
 	uri               :链接地址，如/goods/0007/541/001_328x328.jpg
@@ -14,18 +15,22 @@ local c  = require 'config'
 	img_crop_type     :缩略图裁剪类型
 	cur_uri_reg_model :缩略图uri正则规则
 ]]
-local uri = ngx.var.uri
+local uri = "/photos"..ngx.var.uri
+local new_uri = ngx.var.uri
 local ngx_img_root = ngx.var.image_root
 local ngx_thumbnail_root = ngx.var.thumbnail_root
 local img_width,img_height,img_size,img_crop_type = 0
 local cur_uri_reg = c.default_uri_reg
 
---[[
-	日志函数
-	log_level: 默认为ngx.NOTICE
-	取值范围：ngx.STDERR , ngx.EMERG , ngx.ALERT , ngx.CRIT , ngx.ERR , ngx.WARN , ngx.NOTICE , ngx.INFO , ngx.DEBUG
-	请配合nginx.conf中error_log的日志级别使用
-]]
+local file = string.gsub(new_uri, "@%d+x%d+", "")
+local host = "xxxxoss-cn-xxxinternal.aliyuncs.com"
+--输入oss地址
+
+--local new_file = string.gsub(new_uri,  "[^/]+.jpg", "")
+local new_file = string.match(new_uri, "(.+)/[^/]*%.%w+$")
+--os.execute ("rm -rf /app/www/img/photos/*")
+os.execute ("wget -N -P /app/www/img/photos"..new_file.." "..host..""..file.."")
+
 function lua_log(msg,log_level)
 	log_level = log_level or c.lua_log_level
     if(c.enabled_log) then 
@@ -40,7 +45,7 @@ function table.contains(table,element)
         local dir = value['dir']
         local sizes = value['sizes']
 		local uri_reg = value['uri_reg']
-        _,_,img_width,img_height = string.find(uri,''..dir..'+.*_([0-9]+)x([0-9]+)')
+        _,_,img_width,img_height = string.find(uri,''..dir..'+.*@([0-9]+)x([0-9]+)')
         if(img_width and img_height and img_crop_type==0) then
             img_size = img_width..'x'..img_height
             for _, value in pairs(sizes) do
@@ -78,9 +83,10 @@ end
 
 -- 拼接gm命令
 local function generate_gm_command(img_crop_type,img_original_path,img_size,img_thumbnail_path)
+--	local cmd = c.gm_path .. ' benchmark -stepthreads 2  convert '  .. img_original_path
 	local cmd = c.gm_path .. ' convert ' .. img_original_path
 	if (img_crop_type == 1) then
-		cmd = cmd .. ' -thumbnail '  .. img_size .. ' -background ' .. c.img_background_color .. ' -gravity center -extent ' .. img_size
+		cmd = cmd .. ' -thumbnail '   .. img_size .. ' -background ' .. c.img_background_color .. ' -gravity center -extent ' .. img_size
 	elseif (img_crop_type == 2) then
 		cmd = cmd .. ' -thumbnail '  .. img_size	
 	elseif (img_crop_type == 3) then
@@ -93,7 +99,7 @@ local function generate_gm_command(img_crop_type,img_original_path,img_size,img_
 		lua_log('img_crop_type error:'..img_crop_type,ngx.ERR)
 		ngx.exit(404)
 	end	
-	cmd = cmd .. ' ' .. img_thumbnail_path
+	cmd = cmd .. ' '  .. img_thumbnail_path
 	return cmd
 end
 
